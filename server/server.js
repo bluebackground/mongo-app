@@ -4,8 +4,12 @@ const bodyParser = require('body-parser');
 const mongoose = require('./db/mongoose.js').mongoose;
 const Task = require('./models/Task.js').Task;
 const User = require('./models/User.js').User;
+const {
+  ObjectID,
+} = require('mongodb');
 
 const app = express();
+const port = process.env.PORT || 3000;
 
 app.use(bodyParser.json());
 
@@ -34,8 +38,37 @@ app.post('/tasks', (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log('Listening on port 3000');
+app.get('/todos/:id/', (req, res) => {
+  const {
+    id,
+  } = req.params;
+  if (ObjectID.isValid(id)) {
+    Task.findById(id)
+      .then((doc) => {
+        if (doc) {
+          res.send(JSON.stringify(doc, undefined, 2));
+        } else {
+          res.send(JSON.stringify({
+            message: 'Nothing found',
+          }, undefined, 2));
+        }
+      })
+      .catch((err) => {
+        res.status(400);
+        res.send(JSON.stringify({
+          message: 'Server Error',
+        }, undefined, 2));
+      });
+  } else {
+    // Send back an error message
+    res.send(JSON.stringify({
+      message: 'Invalid Input',
+    }, undefined, 2));
+  }
+});
+
+app.listen(port, () => {
+  console.log(`Listening on port ${port}`);
 });
 
 module.exports = {
